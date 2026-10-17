@@ -14,9 +14,6 @@
     "review"
   ],
   "dependencies": [
-    {
-      "name": "agent-skills",
-      "marketplace": "addy-agent-skills"
-    }
+    "agent-skills"
   ]
 }

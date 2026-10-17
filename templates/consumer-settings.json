@@ -6,17 +6,11 @@
         "repo": "jksim/agent-skills-jksim"
       },
       "autoUpdate": true
-    },
-    "addy-agent-skills": {
-      "source": {
-        "source": "github",
-        "repo": "addyosmani/agent-skills"
-      },
-      "autoUpdate": true
     }
   },
   "enabledPlugins": {
     "agent-skills-jksim@jksim": true,
-    "agent-skills@addy-agent-skills": true
+    "agent-skills@jksim": true,
+    "agent-skills@addy-agent-skills": false
   }
 }

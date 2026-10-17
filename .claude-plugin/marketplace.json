@@ -4,14 +4,20 @@
   "owner": {
     "name": "Jarrett Simerson"
   },
-  "allowCrossMarketplaceDependenciesOn": [
-    "addy-agent-skills"
-  ],
   "plugins": [
     {
       "name": "agent-skills-jksim",
       "source": "./",
       "description": "Team engineering process: spec, plan, build, test, review, ship."
+    },
+    {
+      "name": "agent-skills",
+      "source": {
+        "source": "github",
+        "repo": "addyosmani/agent-skills",
+        "sha": "aeac41d4d005999432bb7312f7ff06383a91d59d"
+      },
+      "description": "Upstream agent-skills by Addy Osmani, pinned to 0.6.13 (aeac41d)."
     }
   ]
 }
