@@ -17,7 +17,7 @@ The process skills come from the upstream plugin [agent-skills](https://github.c
 
 1. Merge `templates/consumer-settings.json` into the project's `.claude/settings.json`.
 2. Commit `.claude/settings.json`.
-3. Each team member opens the project in Claude Code and accepts the folder trust dialog. Claude Code then adds the `jksim` marketplace and installs `agent-skills-jksim` and its dependency `agent-skills@jksim`. There is no separate install prompt. Check with `/plugin`.
+3. Each team member opens the project in Claude Code and accepts the folder trust dialog. Claude Code then adds the `jksim` marketplace and installs `agent-skills-jksim` and its dependency `agent-skills@jksim`. There is no separate install prompt. The first time, Claude Code installs the plugins in the background: run `/reload-plugins` once, or start a new session. Then check with `/plugin`.
 
 The template turns off `agent-skills@addy-agent-skills` in the project. If a project merged an older template, remove its `addy-agent-skills` entry from `extraKnownMarketplaces`. Two copies of `agent-skills` would load every skill twice. In other projects, an `addy-agent-skills` install still works as before.
 
