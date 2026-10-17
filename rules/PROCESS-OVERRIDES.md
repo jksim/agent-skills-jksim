@@ -33,3 +33,6 @@ Examples: a test shows that the spec is wrong. A review finds a missing task.
 
 ## Commits (rule 4)
 Rule 4 applies over the `git-workflow-and-versioning` advice against squashing. The team squashes fix-up commits into the commit they fix before push. Each logical change keeps its own commit.
+
+## Handoff
+The todo file shows the current state: checked tasks and a short "Next" note. A teammate continues from the spec, the plan, the todo file and `git log`.
