@@ -56,4 +56,43 @@ while IFS= read -r s; do
   if grep -qxF "## $s" "$CLAUDE_PLUGIN_ROOT/rules/PROCESS-OVERRIDES.md"; then echo "  ok   U2 heading: $s"; else echo "  FAIL U2 heading missing: $s"; fails=$((fails + 1)); fi
 done < <(grep -o 'sections=([^)]*)' "$script" | grep -o '"[^"]*"' | tr -d '"' | sort -u)
 
+# Every name in the case table gives a reminder, as a skill and as a command.
+names=$(sed -n '/^case /,/^esac/p' "$script" | grep -E '^ +[a-z|[:space:]-]+\)' | sed 's/).*//' | tr '|' '\n' | tr -d ' ')
+while IFS= read -r n; do
+  [[ -z "$n" ]] && continue
+  for form in skill cmd; do
+    out=$("$form" "agent-skills:$n") && rc=0 || rc=$?
+    if ((rc == 0)) && jq -e '.hookSpecificOutput.additionalContext | contains("\n## ")' <<<"$out" >/dev/null 2>&1; then
+      echo "  ok   T $form agent-skills:$n"
+    else
+      echo "  FAIL T $form agent-skills:$n: rc=$rc"; fails=$((fails + 1))
+    fi
+  done
+done <<<"$names"
+quiet "T own plugin prefix" "$(skill agent-skills-jksim:spec)"
+
+# CRLF line ends in the overrides file give the same reminder.
+tmp=$(mktemp -d)
+mkdir -p "$tmp/rules" && sed 's/$/\r/' "$CLAUDE_PLUGIN_ROOT/rules/PROCESS-OVERRIDES.md" >"$tmp/rules/PROCESS-OVERRIDES.md"
+out=$(jq -cn '{hook_event_name: "PreToolUse", tool_input: {skill: "agent-skills:plan"}}' | CLAUDE_PLUGIN_ROOT="$tmp" "$script")
+has "T CRLF overrides file" "$out" ".claude-work/tasks/plan-<id>.md"
+out=$(jq -cn '{hook_event_name: "PreToolUse", tool_input: {skill: "agent-skills:plan"}}' | CLAUDE_PLUGIN_ROOT="$tmp/none" "$script") && rc=0 || rc=$?
+if ((rc == 0)) && [[ -z "$out" ]]; then echo "  ok   T missing overrides file"; else echo "  FAIL T missing overrides file"; fails=$((fails + 1)); fi
+rm -rf "$tmp"
+
+# Upstream drift: each name must exist in upstream at the pinned commit.
+sha=$(jq -r '.plugins[] | select(.name == "agent-skills") | .source.sha' "$CLAUDE_PLUGIN_ROOT/.claude-plugin/marketplace.json")
+up=""
+for d in "${UPSTREAM_DIR:-}" "$CLAUDE_PLUGIN_ROOT/../agent-skills"; do
+  if [[ -n "$d" && -d "$d/skills" && "$(git -C "$d" rev-parse HEAD 2>/dev/null)" == "$sha" ]]; then up=$d; break; fi
+done
+if [[ -z "$up" ]]; then
+  echo "  skip T upstream drift (no upstream checkout at $sha; set UPSTREAM_DIR)"
+else
+  while IFS= read -r n; do
+    [[ -z "$n" ]] && continue
+    if [[ -d "$up/skills/$n" || -f "$up/.claude/commands/$n.md" ]]; then echo "  ok   T upstream has $n"; else echo "  FAIL T upstream has no $n"; fails=$((fails + 1)); fi
+  done <<<"$names"
+fi
+
 ((fails == 0))
