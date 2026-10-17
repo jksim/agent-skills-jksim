@@ -1,0 +1,9 @@
+{
+  "name": "agent-skills-jksim",
+  "version": "0.1.0",
+  "description": "Team engineering process: spec, plan, build, test, review, ship.",
+  "author": { "name": "Jarrett Simerson" },
+  "repository": "https://github.com/jksim/agent-skills-jksim",
+  "license": "MIT",
+  "keywords": ["process", "spec", "tdd", "review"]
+}

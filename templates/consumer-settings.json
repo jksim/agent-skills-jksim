@@ -1,0 +1,11 @@
+{
+  "extraKnownMarketplaces": {
+    "jksim": {
+      "source": { "source": "github", "repo": "jksim/agent-skills-jksim" },
+      "autoUpdate": true
+    }
+  },
+  "enabledPlugins": {
+    "agent-skills-jksim@jksim": true
+  }
+}

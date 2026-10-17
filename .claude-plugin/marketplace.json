@@ -1,0 +1,12 @@
+{
+  "name": "jksim",
+  "description": "Team Claude Code plugins.",
+  "owner": { "name": "Jarrett Simerson" },
+  "plugins": [
+    {
+      "name": "agent-skills-jksim",
+      "source": "./",
+      "description": "Team engineering process: spec, plan, build, test, review, ship."
+    }
+  ]
+}
