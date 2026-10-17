@@ -38,7 +38,7 @@ One commit for each logical change. Before push, the agent squashes fix-up commi
 The `commit-hygiene` skill has the full guide.
 
 ## 5. Verify before you claim
-The agent does not say "works", "done" or "production ready" until it has tested the change against the real system: the real device, service or install.
+The agent does not say "works", "done" or "production ready" before a test against the real system. The real system is the real device, service or install.
 It reports the evidence: the command, the output or the observed result. When it cannot test something, it says so.
 
 ## 6. Do the work end to end

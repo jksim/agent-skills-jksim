@@ -7,7 +7,7 @@ description: Keeps commits few and messages short. Use before a commit, before a
 
 ## Overview
 
-Rule 4 of Jarrett's rules: comments are short. A change has only the commits that it logically needs. A reviewer reads one clean commit for each change, not a history of attempts.
+Rule 4 of Jarrett's rules: a change has only the commits that it logically needs. A reviewer reads one clean commit for each change, not a history of attempts. Comments are short.
 
 The `commit-check` hook warns when a `git commit` message breaks the limits. It does not block. You fix the commit.
 

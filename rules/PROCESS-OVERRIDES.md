@@ -19,7 +19,8 @@ Working files go in `.claude-work/`. The upstream paths change as follows:
 
 `<id>` is the module id from the capability map. With no map, `<id>` is a short kebab-case feature id.
 A project that already has its own ADR folder keeps it.
-`/agent-skills:build` finds the spec and plan at the team paths.
+Consumer projects commit `.claude-work/`.
+`/agent-skills:build` finds the spec and plan at the team paths. It counts changes in `.claude-work/` as planning files, the same as upstream `SPEC.md` and `tasks/`.
 The constraints pointer line in `CLAUDE.md` names `.claude-work/docs/CONSTRAINTS.md`.
 When a request has several modules, the spec stage makes the capability map at `.claude-work/spec/CAPABILITY-MAP.md` before any module spec.
 
@@ -28,7 +29,7 @@ The spec stage makes or updates `.claude-work/docs/VOCABULARY.md`. Each term has
 When a request is ambiguous, the agent asks questions first. Then it adds the term to the vocabulary.
 
 ## Send back (rule 0)
-When a later stage finds that an earlier stage is wrong, the agent stops. It tells the user which stage is wrong and why. It updates that stage's file with the user, then continues.
+When a later stage finds that an earlier stage is wrong, the agent stops. It tells the user which stage is wrong and why. It updates that stage's file with the user. Then it continues.
 Examples: a test shows that the spec is wrong. A review finds a missing task.
 
 ## Commits (rule 4)
