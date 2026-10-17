@@ -1,83 +1,128 @@
 # agent-skills-jksim
 
-A Claude Code plugin for the team. It gives each project the same engineering process: spec, plan, build, test, review, ship.
+A Claude Code plugin for the team. It gives every project the same engineering process (spec, plan, build, test, review, ship) and the same working rules.
 
-The process skills come from the upstream plugin [agent-skills](https://github.com/addyosmani/agent-skills) by Addy Osmani. The `jksim` marketplace lists it as `agent-skills@jksim`, pinned to one upstream commit. This plugin depends on it and changes its defaults to the team rules. Use the upstream commands: `/agent-skills:spec`, `/agent-skills:plan`, `/agent-skills:build` and the others.
+The process skills come from [agent-skills](https://github.com/addyosmani/agent-skills) by Addy Osmani. This plugin installs them for you and adapts them to the team rules.
 
-## What it does
+## Before you start
 
-- Loads Jarrett's rules (`rules/JARRETTS-RULES.md`) into each session and subagent. The rules load again after `/clear` and compaction.
-- Warns when a `git commit` message is too long or looks like a fix-up. It does not block.
-- Skills: `simplified-english` (rule 1 guide), `commit-hygiene` (rule 4 guide).
-- Loads the team overrides (`rules/PROCESS-OVERRIDES.md`) for the upstream skills: working-file paths in `.claude-work/`, the vocabulary step, send-back, squashing fix-up commits, and the handoff note.
-- Repeats the relevant override when an upstream skill or command starts.
-- Blocks the creation of upstream root working files (`SPEC.md`, `tasks/plan.md`, `CONSTRAINTS.md`, `docs/decisions/`, …) and gives the team path. Existing root files are not blocked.
+You need these on your machine:
 
-## Install in a project
+| Need | Check | Fix |
+|---|---|---|
+| Claude Code (tested with 2.1.302) | `claude --version` | `claude update` |
+| `jq` | `jq --version` | `sudo apt install jq` or `brew install jq` |
+| Access to the private repo `jksim/agent-skills-jksim` | `gh repo view jksim/agent-skills-jksim` | Ask the repo owner for access |
+| Git credentials that work without a prompt | `git ls-remote https://github.com/jksim/agent-skills-jksim` (or the `git@github.com:` URL for SSH) runs with no password prompt | See [Git access](#git-access) |
 
-1. Merge `templates/consumer-settings.json` into the project's `.claude/settings.json`.
-2. Commit `.claude/settings.json`.
-3. Each team member opens the project in Claude Code and accepts the folder trust dialog. Claude Code then adds the `jksim` marketplace and installs `agent-skills-jksim` and its dependency `agent-skills@jksim`. There is no separate install prompt. The first time, Claude Code installs the plugins in the background: run `/reload-plugins` once, or start a new session. Then check with `/plugin`.
+Claude Code fetches the plugin with git and cannot ask for a password. Set up git access first.
 
-The template turns off `agent-skills@addy-agent-skills` in the project. If a project merged an older template, remove its `addy-agent-skills` entry from `extraKnownMarketplaces`. Two copies of `agent-skills` would load every skill twice. In other projects, an `addy-agent-skills` install still works as before.
+## Add the plugin to a project
 
-### If agent-skills-jksim fails to load
+One person does this once for each project.
 
-The plugin needs `agent-skills@jksim`. When the dependency is missing or disabled, Jarrett's rules and the hooks do not load.
+1. In the project's root folder, run:
 
-1. Run `/plugin`. Open the **Errors** tab.
-2. If `agent-skills@jksim` is missing, run `claude plugin install agent-skills-jksim@jksim` in the project folder.
-3. If `agent-skills` is disabled, enable it.
-4. Run `/reload-plugins`.
+   ```bash
+   claude plugin marketplace add jksim/agent-skills-jksim --scope project
+   claude plugin install agent-skills-jksim@jksim --scope project
+   ```
 
-If the Errors tab shows `Plugin "agent-skills-jksim" not cached at <path>`, run `claude plugin install agent-skills-jksim@jksim` in the project folder. Then run `/reload-plugins`.
+   These commands create or update `.claude/settings.json`. They add the `jksim` marketplace, this plugin and its dependency `agent-skills@jksim`.
+2. Open `.claude/settings.json` and make two edits. The CLI has no option for them.
+   - In the `jksim` entry under `extraKnownMarketplaces`, add `"autoUpdate": true`. Each teammate then gets updates without a manual step.
+   - Under `enabledPlugins`, add `"agent-skills@addy-agent-skills": false`. Teammates who also have Addy's own plugin installed then do not see every skill twice.
 
-Do not run `claude plugin marketplace add --scope project` in a consumer project. It rewrites `.claude/settings.json` and removes `autoUpdate`.
+   The result:
 
-Working files (specs, tasks, vocabulary, ADRs) go in `.claude-work/`. Commit them, so that teammates can continue the work. Do not put them in `.claude/`. Claude Code protects `.claude/`. Allow rules cannot override this. Writes there can be denied or need approval.
+   ```json
+   {
+     "enabledPlugins": {
+       "agent-skills-jksim@jksim": true,
+       "agent-skills@jksim": true,
+       "agent-skills@addy-agent-skills": false
+     },
+     "extraKnownMarketplaces": {
+       "jksim": {
+         "source": { "source": "github", "repo": "jksim/agent-skills-jksim" },
+         "autoUpdate": true
+       }
+     }
+   }
+   ```
 
-## Update the upstream pin
+   Other keys in the file stay as they are. The same settings are in [`templates/consumer-settings.json`](templates/consumer-settings.json).
+3. Commit `.claude/settings.json` and push.
 
-The team gets upstream changes only when the pin changes.
+If you run `claude plugin marketplace add` again later, check that `"autoUpdate": true` is still there. The command rewrites the `jksim` entry.
 
-1. Compare the pinned commit with upstream: `https://github.com/addyosmani/agent-skills/compare/<pinned-sha>...main`.
-2. Read the diff. Look closely at new or changed `hooks/`, `.mcp.json`, `bin/`, `agents/` and `skills/**/scripts`. These run code on each machine.
-3. Check out upstream at the new SHA in `../agent-skills`, or set `UPSTREAM_DIR` to that checkout. Then `./scripts/test.sh` checks that the names in `scripts/skill-overrides.sh` still exist. Without that checkout, the check prints "skip".
-4. Put the new SHA in the `agent-skills` entry of `.claude-plugin/marketplace.json`.
-5. Bump `version` in `.claude-plugin/plugin.json`. Run `./scripts/test.sh` and `./scripts/e2e-smoke.sh`. Push.
-6. In a consumer project, check with `/plugin` that `agent-skills@jksim` shows the new commit. If upstream did not change its own `version`, Claude Code may keep the old copy. Then run `claude plugin update agent-skills@jksim`.
+## Start using it
 
-## Private repo access
+Each team member does this once for each project.
 
-The repo is private. Claude Code uses the git credentials on your machine. It cannot prompt for them. Use one of these:
+1. Pull the project and start Claude Code in its root folder: `claude`.
+2. Accept the folder trust dialog. There is no other install prompt.
+3. Wait a few seconds, then run `/reload-plugins`. Claude Code installs the plugins in the background the first time. A new session also works.
+4. Run `/plugin` and check:
+   - `agent-skills-jksim@jksim` is enabled.
+   - `agent-skills@jksim` is enabled.
+   - `agent-skills@addy-agent-skills` is disabled (only if you have it installed elsewhere).
+   - The **Errors** tab is empty.
 
-- HTTPS: run `gh auth login`, then `gh auth setup-git`. Set `CLAUDE_CODE_PLUGIN_PREFER_HTTPS=1` if you have no GitHub SSH key.
-- SSH: load your key in `ssh-agent`. Add `github.com` to `known_hosts`.
+## Daily use
 
-## Update
+Start each piece of work at the spec stage and follow the stages in order:
 
-The template turns on background auto-update. To update now, in a session: `/plugin marketplace update jksim`. Or in a shell: `claude plugin update agent-skills-jksim@jksim`.
+| Stage | Command |
+|---|---|
+| Spec | `/agent-skills:spec` |
+| Plan | `/agent-skills:plan` |
+| Build | `/agent-skills:build` |
+| Test | `/agent-skills:test` |
+| Review | `/agent-skills:review` |
+| Ship | `/agent-skills:ship` |
 
-You get a new copy only when `version` in `.claude-plugin/plugin.json` changes. An update that arrives during a session applies after `/reload-plugins` or at the next start.
+The plugin works in the background:
 
-Background update cannot prompt for credentials. If your credential helper needs to prompt, the update fails with no message. Store a credential first (see Private repo access).
+- Every session and subagent gets Jarrett's rules ([`rules/JARRETTS-RULES.md`](rules/JARRETTS-RULES.md)). They load again after `/clear` and compaction.
+- Working files go in `.claude-work/`: specs in `spec/`, plans and task lists in `tasks/`, the vocabulary and ADRs in `docs/`. Commit this folder, so that teammates can continue the work.
+- When the agent tries to create `SPEC.md`, `tasks/plan.md` or `CONSTRAINTS.md` at the project root, the plugin stops it and gives the `.claude-work/` path. Root files that already exist are not affected.
+- When a commit message is too long or looks like a fix-up (`wip`, `fix typo`), the agent gets a warning. The commit is not blocked.
 
-If you turn off auto-update in `/plugin`, Claude Code writes that to the project's `.claude/settings.json`. Do not commit that change.
+Two extra skills: `/agent-skills-jksim:simplified-english` (writing style, rule 1) and `/agent-skills-jksim:commit-hygiene` (commits, rule 4).
 
-## Develop
+Do not put working files in `.claude/`. Claude Code protects that folder and asks before writes there.
 
-```bash
-./scripts/test.sh                          # validate, shellcheck, hooks, manifests, hook tests
-./scripts/e2e-smoke.sh                     # opt-in: 5 real sessions; run before each release
-claude --plugin-dir <path-to-this-repo>    # load this copy over the installed one
-```
+## Updates
 
-`e2e-smoke.sh` loads upstream from `../agent-skills` or `UPSTREAM_DIR` when it exists, else the installed copy.
+Updates install in the background. A new version loads at your next session, or after `/reload-plugins`.
 
-After an edit, run `/reload-plugins` in the session.
+To update now, run `claude plugin update agent-skills-jksim@jksim` in a shell.
 
-Do not add this repo as a local marketplace. Its name `jksim` collides with the GitHub marketplace.
+If you turn off auto-update in `/plugin`, Claude Code writes that to `.claude/settings.json`. Do not commit that change.
+
+## Troubleshooting
+
+| Problem | Fix |
+|---|---|
+| `/plugin` does not show the plugins | Check that you trusted the folder and started Claude Code in the project root. Run `/reload-plugins`. |
+| `agent-skills-jksim` failed to load | It needs `agent-skills@jksim`. Run `claude plugin install agent-skills-jksim@jksim` in the project folder, then `/reload-plugins`. |
+| `Plugin "agent-skills-jksim" not cached at <path>` | Run `claude plugin install agent-skills-jksim@jksim` in the project folder, then `/reload-plugins`. |
+| Each `/agent-skills:` skill shows twice | `.claude/settings.json` is missing `"agent-skills@addy-agent-skills": false`. Add it, or run `claude plugin disable agent-skills@addy-agent-skills --scope project` on the machine that has Addy's plugin. Commit the change. If the file still lists an `addy-agent-skills` marketplace, remove that entry. |
+| `jq not found. Rules not loaded.` | Install `jq`, then start a new session. |
+| Updates do not arrive | Your git credentials need a prompt. See [Git access](#git-access). |
+
+## Git access
+
+Use one of these:
+
+- **HTTPS:** run `gh auth login`, then `gh auth setup-git`. If you have no GitHub SSH key, also set `CLAUDE_CODE_PLUGIN_PREFER_HTTPS=1` in your shell profile.
+- **SSH:** load your key in `ssh-agent` and make sure `github.com` is in `~/.ssh/known_hosts`.
+
+## Maintainers
+
+See [MAINTAINING.md](MAINTAINING.md) to change the plugin, run the tests, release a version or update the upstream pin.
 
 ## License
 
-MIT. See `LICENSE` and `NOTICE.md`.
+MIT. See [`LICENSE`](LICENSE) and [`NOTICE.md`](NOTICE.md).

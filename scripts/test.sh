@@ -43,6 +43,9 @@ bad=$(jq -r --arg mk "$mk" --slurpfile m "$m" --slurpfile p .claude-plugin/plugi
       ($p[0].dependencies[]? | (if type == "string" then . else .name end) | select(IN($names[]) | not)) ]
   | .[]' templates/consumer-settings.json)
 [[ -z "$bad" ]] || fail manifests "template or dependency names not in $m: $bad"
+snippet=$(awk '/^ *```json/ {f = 1; next} f && /^ *```/ {exit} f' README.md)
+jq -e --slurpfile t templates/consumer-settings.json '. == $t[0]' <<<"$snippet" >/dev/null 2>&1 ||
+  fail manifests "README settings snippet differs from templates/consumer-settings.json"
 step manifests ok
 
 tests=()
