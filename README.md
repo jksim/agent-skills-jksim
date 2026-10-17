@@ -4,6 +4,8 @@ A Claude Code plugin for the team. It gives every project the same engineering p
 
 The process skills come from [agent-skills](https://github.com/addyosmani/agent-skills) by Addy Osmani. This plugin installs them for you and adapts them to the team rules.
 
+> This is a personal team setup, shared as is. It comes with no warranty and no support. See the MIT [LICENSE](LICENSE).
+
 ## Before you start
 
 You need these on your machine:
@@ -12,10 +14,7 @@ You need these on your machine:
 |---|---|---|
 | Claude Code (tested with 2.1.302) | `claude --version` | `claude update` |
 | `jq` | `jq --version` | `sudo apt install jq` or `brew install jq` |
-| Access to the private repo `jksim/agent-skills-jksim` | `gh repo view jksim/agent-skills-jksim` | Ask the repo owner for access |
-| Git credentials that work without a prompt | `git ls-remote https://github.com/jksim/agent-skills-jksim` (or the `git@github.com:` URL for SSH) runs with no password prompt | See [Git access](#git-access) |
-
-Claude Code fetches the plugin with git and cannot ask for a password. Set up git access first.
+| `git` | `git --version` | `sudo apt install git` or `brew install git` |
 
 ## Add the plugin to a project
 
@@ -120,14 +119,7 @@ If you turn off auto-update in `/plugin`, Claude Code writes that to `.claude/se
 | `Plugin "agent-skills-jksim" not cached at <path>` | Run `claude plugin install agent-skills-jksim@jksim` in the project folder, then `/reload-plugins`. |
 | Each `/agent-skills:` skill shows twice | `.claude/settings.json` is missing `"agent-skills@addy-agent-skills": false`. Add it and commit the change. Do not disable Addy's plugin in `/plugin`: that turns it off in all your projects. If the file still lists an `addy-agent-skills` marketplace, remove that entry. |
 | `jq not found. Rules not loaded.` | Install `jq`, then start a new session. |
-| Updates do not arrive | Your git credentials need a prompt. See [Git access](#git-access). |
-
-## Git access
-
-Use one of these:
-
-- **HTTPS:** run `gh auth login`, then `gh auth setup-git`. If you have no GitHub SSH key, also set `CLAUDE_CODE_PLUGIN_PREFER_HTTPS=1` in your shell profile.
-- **SSH:** load your key in `ssh-agent` and make sure `github.com` is in `~/.ssh/known_hosts`.
+| Adding the marketplace or an update fails with an SSH error | Claude Code uses SSH when your GitHub SSH key works. Set `CLAUDE_CODE_PLUGIN_PREFER_HTTPS=1` in your shell profile to use HTTPS, then start a new session. |
 
 ## Maintainers
 
