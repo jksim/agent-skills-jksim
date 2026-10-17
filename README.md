@@ -19,19 +19,29 @@ Claude Code fetches the plugin with git and cannot ask for a password. Set up gi
 
 ## Add the plugin to a project
 
-One person does this once for each project.
+One person does this once for each project. Start Claude Code in the project's root folder (`claude`) and do these steps in the session.
 
-1. In the project's root folder, run:
+1. Add the marketplace for the project:
 
-   ```bash
-   claude plugin marketplace add jksim/agent-skills-jksim --scope project
-   claude plugin install agent-skills-jksim@jksim --scope project
+   ```text
+   ! claude plugin marketplace add jksim/agent-skills-jksim --scope project
    ```
 
-   These commands create or update `.claude/settings.json`. They add the `jksim` marketplace, this plugin and its dependency `agent-skills@jksim`.
-2. Open `.claude/settings.json` and make two edits. The CLI has no option for them.
-   - In the `jksim` entry under `extraKnownMarketplaces`, add `"autoUpdate": true`. Each teammate then gets updates without a manual step.
-   - Under `enabledPlugins`, add `"agent-skills@addy-agent-skills": false`. Teammates who also have Addy's own plugin installed then do not see every skill twice.
+   The `!` runs the command in your shell. Use the shell form: `/plugin marketplace add` adds the marketplace only for you, not for the project.
+2. Install the plugin:
+
+   ```text
+   /plugin install agent-skills-jksim@jksim
+   ```
+
+   Choose **Install for all collaborators on this repository**. Claude Code also installs the dependency `agent-skills@jksim`.
+3. Ask Claude to make two edits in `.claude/settings.json`. The `/plugin` panel cannot set them for the project. For example, type:
+
+   > In .claude/settings.json, add "autoUpdate": true to the jksim marketplace entry, and add "agent-skills@addy-agent-skills": false to enabledPlugins.
+
+   Claude Code asks you to approve the edit, because `.claude/` is a protected folder.
+   - `autoUpdate` gives each teammate updates without a manual step.
+   - The `false` entry turns off Addy's own copy of `agent-skills` in this project only. Without it, teammates who have Addy's plugin installed see every skill twice. Do not disable Addy's plugin in the `/plugin` panel: that turns it off in all your projects.
 
    The result:
 
@@ -52,7 +62,7 @@ One person does this once for each project.
    ```
 
    Other keys in the file stay as they are. The same settings are in [`templates/consumer-settings.json`](templates/consumer-settings.json).
-3. Commit `.claude/settings.json` and push.
+4. Run `/reload-plugins`. Then commit `.claude/settings.json` and push.
 
 If you run `claude plugin marketplace add` again later, check that `"autoUpdate": true` is still there. The command rewrites the `jksim` entry.
 
@@ -108,7 +118,7 @@ If you turn off auto-update in `/plugin`, Claude Code writes that to `.claude/se
 | `/plugin` does not show the plugins | Check that you trusted the folder and started Claude Code in the project root. Run `/reload-plugins`. |
 | `agent-skills-jksim` failed to load | It needs `agent-skills@jksim`. Run `claude plugin install agent-skills-jksim@jksim` in the project folder, then `/reload-plugins`. |
 | `Plugin "agent-skills-jksim" not cached at <path>` | Run `claude plugin install agent-skills-jksim@jksim` in the project folder, then `/reload-plugins`. |
-| Each `/agent-skills:` skill shows twice | `.claude/settings.json` is missing `"agent-skills@addy-agent-skills": false`. Add it, or run `claude plugin disable agent-skills@addy-agent-skills --scope project` on the machine that has Addy's plugin. Commit the change. If the file still lists an `addy-agent-skills` marketplace, remove that entry. |
+| Each `/agent-skills:` skill shows twice | `.claude/settings.json` is missing `"agent-skills@addy-agent-skills": false`. Add it and commit the change. Do not disable Addy's plugin in `/plugin`: that turns it off in all your projects. If the file still lists an `addy-agent-skills` marketplace, remove that entry. |
 | `jq not found. Rules not loaded.` | Install `jq`, then start a new session. |
 | Updates do not arrive | Your git credentials need a prompt. See [Git access](#git-access). |
 
