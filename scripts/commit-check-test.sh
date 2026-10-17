@@ -19,7 +19,7 @@ quiet() {
 warns() {
   local out
   out=$(run "$2")
-  if jq -e --arg w "$3" '(.hookSpecificOutput.additionalContext | contains($w)) and (.hookSpecificOutput.permissionDecision == null)' <<<"$out" >/dev/null 2>&1; then
+  if jq -e --arg w "$3" '(.hookSpecificOutput.additionalContext | contains($w)) and (.hookSpecificOutput.permissionDecision == null) and (.hookSpecificOutput.hookEventName == "PreToolUse") and (.systemMessage | contains("rule 4"))' <<<"$out" >/dev/null 2>&1; then
     echo "  ok   $1"
   else
     echo "  FAIL $1: $out"; fails=$((fails + 1))
@@ -83,5 +83,24 @@ quiet "X make -C after commit" 'git commit -m "Add hook" && make -C build'
 quiet "X <<- strips tabs" "$dash_tab"
 warns "X delimiter prefix line" "$delim_word" "The commit body has 6 lines"
 quiet "X heredoc text in -m" 'git commit -m "Explain <<EOF use"'
+
+quoted_heredoc=$'git commit -m "$(cat <<\'EOF\'\nAdd "x" hook\n\n1\n2\n3\n4\n5\n6\nEOF\n)"'
+warns "R heredoc with quotes" "$quoted_heredoc" "The commit body has 6 lines"
+warns "R separator after bad message" 'git add . && git commit -m "wip" && make -C build' "looks like a fix-up"
+quiet "R tag message after commit" 'git commit -m "Add hook" && git tag -a v1 -m "1
+2
+3
+4
+5
+6"'
+warns "R --message=" 'git commit --message="wip"' "looks like a fix-up"
+warns "R unquoted -m" 'git commit -m wip' "looks like a fix-up"
+warns "R more fixes" 'git commit -m "more fixes"' "looks like a fix-up"
+warns "R Minor fix" 'git commit -m "Minor fix in x"' "looks like a fix-up"
+quiet "R reuse message" 'git commit -c HEAD'
+quiet "R reuse long form" 'git commit --reuse-message=HEAD'
+quiet "R -F inside quotes" "git commit -m 'note -F'"
+quiet "R not a commit" 'git status && echo "git commit -m wip"'
+quiet "R over 16 KB" "git commit -m \"wip $(printf 'x%.0s' {1..17000})\""
 
 ((fails == 0))

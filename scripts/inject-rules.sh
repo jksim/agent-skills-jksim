@@ -9,7 +9,7 @@ fi
 
 root="${CLAUDE_PLUGIN_ROOT:-$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)}"
 files=("$root/rules/JARRETTS-RULES.md" "$root/rules/PROCESS-OVERRIDES.md")
-event=$(jq -r '.hook_event_name // empty')
+event=$(jq -r '.hook_event_name // empty') || exit 0
 
 case "$event" in
   SessionStart | SubagentStart) ;;

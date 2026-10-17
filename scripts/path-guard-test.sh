@@ -11,10 +11,11 @@ trap 'rm -rf "$CLAUDE_PROJECT_DIR"' EXIT
 
 fails=0
 run() { jq -cn --arg f "$1" '{hook_event_name: "PreToolUse", tool_name: "Write", tool_input: {file_path: $f}}' | "$script"; }
+runcwd() { jq -cn --arg f "$1" --arg c "$2" '{hook_event_name: "PreToolUse", tool_name: "Write", cwd: $c, tool_input: {file_path: $f}}' | env -u CLAUDE_PROJECT_DIR "$script"; }
 denies() {
   local out
   out=$(run "$CLAUDE_PROJECT_DIR/$2")
-  if jq -e --arg w "$3" '.hookSpecificOutput.permissionDecision == "deny" and (.hookSpecificOutput.permissionDecisionReason | contains($w))' <<<"$out" >/dev/null 2>&1; then
+  if jq -e --arg w "$3" '.hookSpecificOutput.hookEventName == "PreToolUse" and .hookSpecificOutput.permissionDecision == "deny" and (.hookSpecificOutput.permissionDecisionReason | contains($w))' <<<"$out" >/dev/null 2>&1; then
     echo "  ok   $1"
   else
     echo "  FAIL $1: $out"; fails=$((fails + 1))
@@ -43,5 +44,16 @@ touch "$CLAUDE_PROJECT_DIR/CONSTRAINTS.md"
 allows "U4 existing root file" "$CLAUDE_PROJECT_DIR/CONSTRAINTS.md"
 mkdir -p "$CLAUDE_PROJECT_DIR/docs/decisions" && touch "$CLAUDE_PROJECT_DIR/docs/decisions/0001.md"
 allows "U4 new ADR in existing docs/decisions" "$CLAUDE_PROJECT_DIR/docs/decisions/0002.md"
+
+denies "N dot segment" ./SPEC.md ".claude-work/spec/SPEC.md"
+denies "N double slash" /SPEC.md ".claude-work/spec/SPEC.md"
+denies "N dot-dot" x/../SPEC.md ".claude-work/spec/SPEC.md"
+allows "N dot-dot out of project" "$CLAUDE_PROJECT_DIR/../SPEC.md"
+allows "N relative file_path" SPEC.md
+d=$CLAUDE_PROJECT_DIR
+out=$(CLAUDE_PROJECT_DIR="$d/" run "$d/SPEC.md")
+if jq -e '.hookSpecificOutput.permissionDecision == "deny"' <<<"$out" >/dev/null 2>&1; then echo "  ok   N trailing slash on project dir"; else echo "  FAIL N trailing slash on project dir: $out"; fails=$((fails + 1)); fi
+out=$(runcwd "$CLAUDE_PROJECT_DIR/SPEC.md" "$CLAUDE_PROJECT_DIR")
+if jq -e '.hookSpecificOutput.permissionDecision == "deny"' <<<"$out" >/dev/null 2>&1; then echo "  ok   N cwd fallback"; else echo "  FAIL N cwd fallback: $out"; fails=$((fails + 1)); fi
 
 ((fails == 0))

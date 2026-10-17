@@ -2,11 +2,13 @@
 # Repeat the team overrides that apply when an agent-skills skill or command starts.
 set -euo pipefail
 
+command -v jq >/dev/null || exit 0
+
 root="${CLAUDE_PLUGIN_ROOT:-$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)}"
 file="$root/rules/PROCESS-OVERRIDES.md"
 input=$(cat)
-event=$(jq -r '.hook_event_name // empty' <<<"$input")
-name=$(jq -r '.command_name // .tool_input.skill // empty' <<<"$input")
+event=$(jq -r '.hook_event_name // empty' <<<"$input") || exit 0
+name=$(jq -r '.command_name // .tool_input.skill // empty' <<<"$input") || exit 0
 [[ -f "$file" && "$name" == agent-skills:* ]] || exit 0
 
 case "${name#agent-skills:}" in

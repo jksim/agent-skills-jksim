@@ -5,7 +5,8 @@
         "hooks": [
           {
             "type": "command",
-            "command": "\"${CLAUDE_PLUGIN_ROOT}\"/scripts/inject-rules.sh"
+            "command": "\"${CLAUDE_PLUGIN_ROOT}\"/scripts/inject-rules.sh",
+            "timeout": 10
           }
         ]
       }
@@ -15,7 +16,8 @@
         "hooks": [
           {
             "type": "command",
-            "command": "\"${CLAUDE_PLUGIN_ROOT}\"/scripts/inject-rules.sh"
+            "command": "\"${CLAUDE_PLUGIN_ROOT}\"/scripts/inject-rules.sh",
+            "timeout": 10
           }
         ]
       }
@@ -27,7 +29,8 @@
           {
             "type": "command",
             "if": "Bash(git commit *)",
-            "command": "\"${CLAUDE_PLUGIN_ROOT}\"/scripts/commit-check.sh"
+            "command": "\"${CLAUDE_PLUGIN_ROOT}\"/scripts/commit-check.sh",
+            "timeout": 10
           }
         ]
       },
@@ -36,7 +39,8 @@
         "hooks": [
           {
             "type": "command",
-            "command": "\"${CLAUDE_PLUGIN_ROOT}\"/scripts/skill-overrides.sh"
+            "command": "\"${CLAUDE_PLUGIN_ROOT}\"/scripts/skill-overrides.sh",
+            "timeout": 10
           }
         ]
       },
@@ -45,7 +49,8 @@
         "hooks": [
           {
             "type": "command",
-            "command": "\"${CLAUDE_PLUGIN_ROOT}\"/scripts/path-guard.sh"
+            "command": "\"${CLAUDE_PLUGIN_ROOT}\"/scripts/path-guard.sh",
+            "timeout": 10
           }
         ]
       }
@@ -55,7 +60,8 @@
         "hooks": [
           {
             "type": "command",
-            "command": "\"${CLAUDE_PLUGIN_ROOT}\"/scripts/skill-overrides.sh"
+            "command": "\"${CLAUDE_PLUGIN_ROOT}\"/scripts/skill-overrides.sh",
+            "timeout": 10
           }
         ]
       }

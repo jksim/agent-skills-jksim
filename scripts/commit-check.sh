@@ -2,67 +2,76 @@
 # Warn when a git commit message breaks rule 4. Never blocks.
 set -euo pipefail
 
-cmd=$(jq -r '.tool_input.command // empty')
+command -v jq >/dev/null || exit 0
+
+cmd=$(jq -r '.tool_input.command // empty') || exit 0
 cmd=${cmd//$'\r'/}
-[[ -z "$cmd" ]] && exit 0
+[[ -z "$cmd" || ${#cmd} -gt 16384 ]] && exit 0
 
-re_dq='"((\\.|[^"\\])*)"'
-re_sq="'([^']*)'"
+re_dq='^"((\\.|[^"\\])*)"'
+re_sq="^'([^']*)'"
+re_cat='^"\$\([[:space:]]*cat[[:space:]]+<<(-?)[[:space:]]*['"'"'"]?([A-Za-z_][A-Za-z0-9_]*)['"'"'"]?'
+re_flag='(^|[[:space:]])(-[a-zA-Z]*m|--message)([[:space:]]+|=)'
+re_git='(^|[[:space:];&|(])git([[:space:]]+-[^[:space:]]+)*[[:space:]]+commit([[:space:]]|$)'
 
-# Command text with quoted strings removed, from "commit" to the next separator.
-bare=$cmd
-while [[ "$bare" =~ $re_dq ]]; do bare=${bare/"${BASH_REMATCH[0]}"/Q}; done
-while [[ "$bare" =~ $re_sq ]]; do bare=${bare/"${BASH_REMATCH[0]}"/Q}; done
-seg=${bare#*commit}
-seg=${seg%%[;&|]*}
-re_skip='(^|[[:space:]])(--no-edit|--fixup|--squash|-F|--file|-C|-c|--reuse-message|--reedit-message)([[:space:]=]|$)'
-[[ "$seg" =~ $re_skip ]] && exit 0
-
-# Text of a heredoc inside one -m argument.
-heredoc_text() {
-  local re="<<(-?)[[:space:]]*['\"]?([A-Za-z_][A-Za-z0-9_]*)['\"]?" line out="" inside=0 tabs="" delim=""
-  [[ "$1" =~ $re ]] || return 0
-  tabs=${BASH_REMATCH[1]}
-  delim=${BASH_REMATCH[2]}
-  while IFS= read -r line; do
-    if ((inside)); then
-      [[ -n "$tabs" ]] && line=${line#"${line%%[!$'\t']*}"}
-      [[ "${line//[[:space:]]/}" == "$delim" ]] && break
-      out+="$line"$'\n'
-    elif [[ "$line" =~ $re ]]; then
-      inside=1
-    fi
-  done <<<"$1"
-  printf '%s' "$out"
+# Remove quoted strings, so separators and flags inside them do not count.
+unquote() {
+  local s=$1 re1='"((\\.|[^"\\])*)"' re2="'([^']*)'"
+  while [[ "$s" =~ $re1 ]]; do s=${s/"${BASH_REMATCH[0]}"/Q}; done
+  while [[ "$s" =~ $re2 ]]; do s=${s/"${BASH_REMATCH[0]}"/Q}; done
+  printf '%s' "$s"
 }
 
+[[ "$cmd" =~ $re_git ]] || exit 0
+rest=${cmd#*"${BASH_REMATCH[0]}"}
+
+re_skip='(^|[[:space:]])(--no-edit|--fixup|--squash|-F|--file|-C|-c|--reuse-message|--reedit-message)([[:space:]=]|$)'
+
 msg=""
-re_m="(^|[[:space:]])(-[a-zA-Z]*m|--message)[[:space:]=]*($re_dq|$re_sq)"
-re_cat='^[[:space:]]*\$\([[:space:]]*cat[[:space:]]+<<'
-rest=$cmd
-while [[ "$rest" =~ $re_m ]]; do
-  whole=${BASH_REMATCH[0]}
-  if [[ -n "${BASH_REMATCH[4]}" ]]; then
-    part=${BASH_REMATCH[4]}
-    if [[ "$part" =~ $re_cat ]]; then
-      part=$(heredoc_text "$part")
-    else
-      part=${part//\\\"/\"}
-      part=${part//\\\\/\\}
-    fi
+while [[ "$rest" =~ $re_flag ]]; do
+  flag=${BASH_REMATCH[0]}
+  gap=$(unquote "${rest%%"$flag"*}")
+  [[ "$gap" == *[\;\&\|]* ]] && break
+  [[ "$gap" =~ $re_skip ]] && exit 0
+  rest=${rest#*"$flag"}
+
+  if [[ "$rest" =~ $re_cat ]]; then
+    tabs=${BASH_REMATCH[1]}
+    delim=${BASH_REMATCH[2]}
+    part=""
+    body=${rest#*$'\n'}
+    rest=""
+    while IFS= read -r line; do
+      [[ -n "$tabs" ]] && line=${line#"${line%%[!$'\t']*}"}
+      if [[ "${line//[[:space:]]/}" == "$delim" ]]; then
+        rest=${body#*$'\n'"$line"}
+        break
+      fi
+      part+="$line"$'\n'
+    done <<<"$body"
+  elif [[ "$rest" =~ $re_dq ]]; then
+    part=${BASH_REMATCH[1]}
+    rest=${rest#"${BASH_REMATCH[0]}"}
+    part=${part//\\\"/\"}
+    part=${part//\\\\/\\}
+  elif [[ "$rest" =~ $re_sq ]]; then
+    part=${BASH_REMATCH[1]}
+    rest=${rest#"${BASH_REMATCH[0]}"}
+  elif [[ "$rest" =~ ^([^[:space:]\;\&\|\"\']+) ]]; then
+    part=${BASH_REMATCH[1]}
+    rest=${rest#"${BASH_REMATCH[0]}"}
   else
-    part=${BASH_REMATCH[6]}
+    break
   fi
   [[ -n "$msg" ]] && msg+=$'\n\n'
   msg+=$part
-  rest=${rest#*"$whole"}
 done
 
 [[ -z "${msg//[[:space:]]/}" ]] && exit 0
 
-subject=$(sed -n '/[^[:space:]]/{p;q}' <<<"$msg")
+subject=$(awk '/[^[:space:]]/ {print; exit}' <<<"$msg")
 len=$(jq -rn --arg s "$subject" '$s | length')
-body_lines=$(sed '0,/[^[:space:]]/d' <<<"$msg" | grep -c '[^[:space:]]' || true)
+body_lines=$(awk 'f && /[^[:space:]]/ {n++} /[^[:space:]]/ {f = 1} END {print n + 0}' <<<"$msg")
 
 warn=()
 ((len > 72)) && warn+=("The commit subject has $len characters. The team limit is 72.")
@@ -75,7 +84,7 @@ shopt -u nocasematch
 
 ((${#warn[@]} == 0)) && exit 0
 
-text="commit-check (rule 4): ${warn[*]} Amend or squash before push. See the commit-hygiene skill."
+text="commit-check (rule 4): ${warn[*]} The team amends or squashes such commits before push. See the commit-hygiene skill."
 jq -cn --arg t "$text" '{
   systemMessage: "commit-check: this commit breaks rule 4. See the agent reply.",
   hookSpecificOutput: { hookEventName: "PreToolUse", additionalContext: $t }
