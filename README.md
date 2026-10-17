@@ -2,17 +2,33 @@
 
 A Claude Code plugin for the team. It gives each project the same engineering process: spec, plan, build, test, review, ship.
 
+The process skills come from the upstream plugin [`agent-skills@addy-agent-skills`](https://github.com/addyosmani/agent-skills). This plugin depends on it and changes its defaults to the team rules. Use the upstream commands: `/agent-skills:spec`, `/agent-skills:plan`, `/agent-skills:build` and the others.
+
 ## What it does
 
 - Loads Jarrett's rules (`rules/JARRETTS-RULES.md`) into each session and subagent. The rules load again after `/clear` and compaction.
 - Warns when a `git commit` message is too long or looks like a fix-up. It does not block.
 - Skills: `simplified-english` (rule 1 guide), `commit-hygiene` (rule 4 guide).
+- Loads the team overrides (`rules/PROCESS-OVERRIDES.md`) for the upstream skills: working-file paths in `.claude-work/`, the vocabulary step, send-back, and squashing fix-up commits.
+- Repeats the relevant override when an upstream skill or command starts.
+- Blocks the creation of upstream root working files (`SPEC.md`, `tasks/plan.md`, `CONSTRAINTS.md`, `docs/decisions/`, …) and gives the team path. Existing root files are not blocked.
 
 ## Install in a project
 
 1. Merge `templates/consumer-settings.json` into the project's `.claude/settings.json`.
 2. Commit `.claude/settings.json`.
-3. Each team member opens the project in Claude Code and accepts the folder trust dialog. Claude Code then adds the `jksim` marketplace and enables the plugin. There is no separate install prompt. Check with `/plugin`.
+3. Each team member opens the project in Claude Code and accepts the folder trust dialog. Claude Code then adds the `jksim` and `addy-agent-skills` marketplaces and enables both plugins. There is no separate install prompt. Check with `/plugin`.
+
+Both marketplaces must be registered. If `addy-agent-skills` is missing, the dependency does not install, and `agent-skills-jksim` fails to load. The template registers both.
+
+### If agent-skills-jksim fails to load
+
+The plugin needs `agent-skills@addy-agent-skills`. When the dependency is missing or disabled, Jarrett's rules and the hooks do not load.
+
+1. Run `/plugin`. Open the **Errors** tab.
+2. If the `addy-agent-skills` marketplace is missing, merge the template again and restart the session.
+3. If `agent-skills` is disabled, enable it.
+4. Run `/reload-plugins`.
 
 Do not run `claude plugin marketplace add --scope project` in a consumer project. It rewrites `.claude/settings.json` and removes `autoUpdate`.
 

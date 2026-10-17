@@ -1,7 +1,12 @@
 {
   "name": "jksim",
   "description": "Team Claude Code plugins.",
-  "owner": { "name": "Jarrett Simerson" },
+  "owner": {
+    "name": "Jarrett Simerson"
+  },
+  "allowCrossMarketplaceDependenciesOn": [
+    "addy-agent-skills"
+  ],
   "plugins": [
     {
       "name": "agent-skills-jksim",

@@ -8,7 +8,7 @@ if ! command -v jq >/dev/null; then
 fi
 
 root="${CLAUDE_PLUGIN_ROOT:-$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)}"
-rules="$root/rules/JARRETTS-RULES.md"
+files=("$root/rules/JARRETTS-RULES.md" "$root/rules/PROCESS-OVERRIDES.md")
 event=$(jq -r '.hook_event_name // empty')
 
 case "$event" in
@@ -16,14 +16,19 @@ case "$event" in
   *) exit 0 ;;
 esac
 
-if [[ ! -f "$rules" ]]; then
-  jq -cn --arg p "$rules" '{systemMessage: ("agent-skills-jksim: rules file not found: " + $p)}'
-  exit 0
-fi
+text=""
+missing=()
+for f in "${files[@]}"; do
+  if [[ -f "$f" ]]; then text+="$(cat "$f")"$'\n\n'; else missing+=("$f"); fi
+done
 
-jq -cn --arg e "$event" --rawfile r "$rules" '{
+msg=""
+((${#missing[@]})) && msg="agent-skills-jksim: rules file not found: ${missing[*]}"
+[[ -z "$text" ]] && { jq -cn --arg m "$msg" '{systemMessage: $m}'; exit 0; }
+
+jq -cn --arg e "$event" --arg r "$text" --arg m "$msg" '{
   hookSpecificOutput: {
     hookEventName: $e,
     additionalContext: ("The agent-skills-jksim plugin is active. This team'"'"'s working rules follow.\n\n" + $r)
   }
-}'
+} + (if $m == "" then {} else {systemMessage: $m} end)'
