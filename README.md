@@ -2,6 +2,12 @@
 
 A Claude Code plugin for the team. It gives each project the same engineering process: spec, plan, build, test, review, ship.
 
+## What it does
+
+- Loads Jarrett's rules (`rules/JARRETTS-RULES.md`) into each session and subagent. The rules load again after `/clear` and compaction.
+- Warns when a `git commit` message is too long or looks like a fix-up. It does not block.
+- Skills: `simplified-english` (rule 1 guide), `commit-hygiene` (rule 4 guide).
+
 ## Install in a project
 
 1. Merge `templates/consumer-settings.json` into the project's `.claude/settings.json`.
