@@ -18,6 +18,7 @@ for e in SessionStart SubagentStart; do
   out=$(run "$e")
   if [[ $(jq -r .hookSpecificOutput.hookEventName <<<"$out") == "$e" ]]; then ok "R $e event"; else no "R $e event"; fi
   if jq -r .hookSpecificOutput.additionalContext <<<"$out" | grep -q "## 4. Short comments"; then ok "R $e rules"; else no "R $e rules"; fi
+  if jq -r .hookSpecificOutput.additionalContext <<<"$out" | grep -q "## 8. Rejected scope stays rejected"; then ok "R $e rule 8"; else no "R $e rule 8"; fi
   if jq -r .hookSpecificOutput.additionalContext <<<"$out" | grep -q "# Team overrides for agent-skills"; then ok "U1 $e overrides"; else no "U1 $e overrides"; fi
 done
 
