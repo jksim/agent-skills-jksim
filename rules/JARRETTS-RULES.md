@@ -30,6 +30,9 @@ When a request is ambiguous, the agent asks questions before it acts. Then it ad
 The agent does not work around a missing tool. It installs the correct tool.
 Before it picks a tool, SDK or API, it checks the official source for the latest suitable version. It does not design on an outdated API.
 Project-local installs need no approval. System-wide installs and new runtime dependencies need approval first.
+When a platform has an official CLI, the agent uses that CLI. It does not use a workaround such as raw API calls, web scraping or a hand-made script.
+Examples: `android` (Android CLI) for Android, `gh` for GitHub, `gcloud` for Google Cloud, `az` for Azure, `aws` for AWS, `kubectl` for Kubernetes.
+When the CLI is not installed, the agent installs it under the same approval rules.
 
 ## 4. Short comments and few commits
 Comments are short. They explain only code that is not clear.
