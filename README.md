@@ -30,6 +30,8 @@ The plugin needs `agent-skills@addy-agent-skills`. When the dependency is missin
 3. If `agent-skills` is disabled, enable it.
 4. Run `/reload-plugins`.
 
+If the Errors tab shows `Plugin "agent-skills-jksim" not cached at <path>`, run `claude plugin install agent-skills-jksim@jksim` in the project folder. Then run `/reload-plugins`.
+
 Do not run `claude plugin marketplace add --scope project` in a consumer project. It rewrites `.claude/settings.json` and removes `autoUpdate`.
 
 Working files (specs, tasks, vocabulary, ADRs) go in `.claude-work/`. Do not put them in `.claude/`. Claude Code protects `.claude/`. Allow rules cannot override this. Writes there can be denied or need approval.
