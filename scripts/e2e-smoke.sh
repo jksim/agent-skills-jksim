@@ -47,6 +47,24 @@ result "G1 no root SPEC.md" test -s "$work/g1.jsonl" -a ! -e "$work/g1/SPEC.md"
 run u3 "/agent-skills:spec a CLI that prints hello. Reply with one question only. Do not write files."
 result "U3 override reminder" hook u3 UserPromptExpansion "Team overrides for agent-skills:spec"
 
+# M1: migrate an upstream-layout repo.
+m=$work/m1
+mkdir -p "$m/tasks" && git -C "$m" init -q
+printf '# Spec\n' >"$m/SPEC.md"
+printf 'Source of truth: ../SPEC.md.\n- [ ] Task 1\n' >"$m/tasks/plan.md"
+printf -- '- [x] done\n**Files:** SPEC.md\n' >"$m/tasks/todo.md"
+printf -- '- SPEC.md: approved spec\n' >"$m/CLAUDE.md"
+git -C "$m" add -A && git -C "$m" -c user.email=t@example.com -c user.name=T commit -qm Initial
+(cd "$m" && claude "${dirs[@]}" -p "/agent-skills-jksim:migrate-layout smoke. I approve the move table in advance; continue without waiting." \
+  --permission-mode acceptEdits --allowedTools "Bash(git *)" "Bash(mkdir *)" "Bash(rmdir *)" --max-turns 30 </dev/null >"$work/m1.out" 2>&1) || true
+result "M1 files moved" test -f "$m/.claude-work/spec/SPEC.md" -a -f "$m/.claude-work/tasks/plan-smoke.md" -a ! -e "$m/SPEC.md"
+result "M1 history kept" test "$(git -C "$m" log --follow --oneline -- .claude-work/spec/SPEC.md | wc -l)" -eq 2
+result "M1 one commit, clean tree" test "$(git -C "$m" log --oneline | wc -l)" -eq 2 -a -z "$(git -C "$m" status --porcelain)"
+result "M1 live reference updated" grep -q '.claude-work/spec/SPEC.md' "$m/CLAUDE.md"
+result "M1 checkboxes unchanged" grep -q '^- \[ \] Task 1' "$m/.claude-work/tasks/plan-smoke.md"
+result "M1 plan link updated" grep -q '\.\./spec/SPEC\.md' "$m/.claude-work/tasks/plan-smoke.md"
+result "M1 record unchanged" grep -q '^\*\*Files:\*\* SPEC.md$' "$m/.claude-work/tasks/todo-smoke.md"
+
 if ((fails)); then
   echo "e2e-smoke: $fails failed (streams kept in $work)"
   trap - EXIT

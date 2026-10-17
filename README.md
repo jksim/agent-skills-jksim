@@ -98,9 +98,19 @@ The plugin works in the background:
 - When the agent tries to create `SPEC.md`, `tasks/plan.md` or `CONSTRAINTS.md` at the project root, the plugin stops it and gives the `.claude-work/` path. Root files that already exist are not affected.
 - When a commit message is too long or looks like a fix-up (`wip`, `fix typo`), the agent gets a warning. The commit is not blocked.
 
-Two extra skills: `/agent-skills-jksim:simplified-english` (writing style, rule 1) and `/agent-skills-jksim:commit-hygiene` (commits, rule 4).
+Extra skills: `/agent-skills-jksim:simplified-english` (writing style, rule 1), `/agent-skills-jksim:commit-hygiene` (commits, rule 4) and `/agent-skills-jksim:migrate-layout` (see below).
 
 Do not put working files in `.claude/`. Claude Code protects that folder and asks before writes there.
+
+## Migrate a project
+
+A project that started with upstream agent-skills keeps `SPEC.md`, `tasks/plan.md` and `tasks/todo.md` at its root. To move them to `.claude-work/`:
+
+1. Commit or stash your changes. The migration needs a clean working tree.
+2. In a Claude Code session in the project root, run `/agent-skills-jksim:migrate-layout <id>`. The `<id>` names the plan and task files, for example `fl-debug` gives `plan-fl-debug.md`.
+3. Check the table of moves and answer the questions. Then approve it.
+
+The skill moves the files with `git mv`, so they keep their history. It updates the references in `CLAUDE.md`, the README and the moved files, and leaves finished task records as they are. It keeps an existing `docs/decisions/` folder unless you say otherwise. It stops and asks when a target file already exists, when `.claude-work/` is in `.gitignore`, or when `tasks/` holds other files. It makes one commit and does not push.
 
 ## Updates
 

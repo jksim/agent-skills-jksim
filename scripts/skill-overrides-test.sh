@@ -95,4 +95,13 @@ else
   done <<<"$names"
 fi
 
+# migrate-layout copies the Paths table. Each team path in it must also be in the overrides.
+mig="$CLAUDE_PLUGIN_ROOT/skills/migrate-layout/SKILL.md"
+while IFS= read -r path; do
+  if grep -qF "$path" "$CLAUDE_PLUGIN_ROOT/rules/PROCESS-OVERRIDES.md"; then echo "  ok   P overrides has $path"; else echo "  FAIL P overrides has no $path"; fails=$((fails + 1)); fi
+done < <(grep '^| ' "$mig" | grep -oE '\.claude-work/[^`]+' | sort -u)
+while IFS= read -r path; do
+  if grep -qF "$path" "$mig"; then echo "  ok   P skill has $path"; else echo "  FAIL P migrate-layout has no $path"; fails=$((fails + 1)); fi
+done < <(grep '^| ' "$CLAUDE_PLUGIN_ROOT/rules/PROCESS-OVERRIDES.md" | grep -oE '\.claude-work/[^`]+' | grep -v '^\.claude-work/docs/adr/' | sort -u)
+
 ((fails == 0))
