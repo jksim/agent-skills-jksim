@@ -51,7 +51,7 @@ result "U3 override reminder" hook u3 UserPromptExpansion "Team overrides for ag
 m=$work/m1
 mkdir -p "$m/tasks" && git -C "$m" init -q
 printf '# Spec\n' >"$m/SPEC.md"
-printf 'Source of truth: ../SPEC.md.\n- [ ] Task 1\n' >"$m/tasks/plan.md"
+printf 'Source of truth: ../SPEC.md.\n## Task List (detail in todo.md)\n- [ ] Task 1\n' >"$m/tasks/plan.md"
 printf -- '- [x] done\n**Files:** SPEC.md\n' >"$m/tasks/todo.md"
 printf -- '- SPEC.md: approved spec\n' >"$m/CLAUDE.md"
 git -C "$m" add -A && git -C "$m" -c user.email=t@example.com -c user.name=T commit -qm Initial
@@ -65,6 +65,7 @@ result "M1 untracked file left alone" test "$(git -C "$m" status --porcelain)" =
 result "M1 live reference updated" grep -q '.claude-work/spec/SPEC.md' "$m/CLAUDE.md"
 result "M1 checkboxes unchanged" grep -q '^- \[ \] Task 1' "$m/.claude-work/tasks/plan-smoke.md"
 result "M1 plan link updated" grep -q '\.\./spec/SPEC\.md' "$m/.claude-work/tasks/plan-smoke.md"
+result "M1 bare todo.md updated" grep -q 'detail in todo-smoke\.md' "$m/.claude-work/tasks/plan-smoke.md"
 result "M1 record unchanged" grep -q '^\*\*Files:\*\* SPEC.md$' "$m/.claude-work/tasks/todo-smoke.md"
 
 if ((fails)); then

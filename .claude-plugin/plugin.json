@@ -1,6 +1,6 @@
 {
   "name": "agent-skills-jksim",
-  "version": "0.6.1",
+  "version": "0.6.2",
   "description": "Team engineering process: spec, plan, build, test, review, ship.",
   "author": {
     "name": "Jarrett Simerson"

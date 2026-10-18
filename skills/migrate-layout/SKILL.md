@@ -73,6 +73,8 @@ Run `git mv <old> <new>` for each file. Make the target folders first (`mkdir -p
 
 Search the project for the old paths: `git grep -n -E 'SPEC(-[A-Za-z0-9_-]+)?\.md|CAPABILITY-MAP\.md|CONSTRAINTS\.md|tasks/(plan|todo)\.md|docs/(ideas|intent|decisions)/'`.
 
+Also search for the bare file names, because a moved file can name its partner without a folder: `git grep -n -E '(^|[^-/A-Za-z0-9_])(plan|todo)\.md'`. Example: "detail in todo.md" in the plan becomes "detail in todo-<id>.md".
+
 A **live reference** tells a reader or the agent where the file is now. Change it:
 - `CLAUDE.md`: "`SPEC.md`: approved spec" becomes "`.claude-work/spec/SPEC.md`: approved spec".
 - `README.md`: `[SPEC.md](SPEC.md)` becomes `[SPEC.md](.claude-work/spec/SPEC.md)`.
