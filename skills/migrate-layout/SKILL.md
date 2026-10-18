@@ -26,7 +26,7 @@ Do not use it for a new project. The spec stage writes to `.claude-work/` from t
 
 Stop and tell the user when one of these is true:
 - The folder is not a git repository.
-- `git status --porcelain --untracked-files=all` shows changes. Ask the user to commit or stash them first.
+- `git status --porcelain --untracked-files=no` shows changes to tracked files. Ask the user to commit or stash them first. Untracked files can stay: step 8 stages with `git add -u`, which never adds them.
 - `git check-ignore -q .claude-work/spec/SPEC.md` succeeds. Check a file path: a pattern such as `.claude-work/` does not match the folder before it exists. Consumer projects commit `.claude-work/`.
 
 ### 2. Find the old files
