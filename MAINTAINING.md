@@ -45,6 +45,7 @@ The team gets upstream changes only when the pin changes.
 
 1. Compare the pinned commit with upstream: `https://github.com/addyosmani/agent-skills/compare/<pinned-sha>...main`.
 2. Read the diff. Look closely at new or changed `hooks/`, `.mcp.json`, `bin/`, `agents/` and `skills/**/scripts`. These run code on each machine.
+   Also check `commands/` and `.claude/commands/`: a `` !` `` line runs shell when the command loads. In all frontmatter, look for `allowed-tools`, `hooks`, `mcpServers` and `permissionMode`.
 3. Check out upstream at the new SHA in `../agent-skills`, or set `UPSTREAM_DIR` to that checkout. Then `./scripts/test.sh` checks that the names in `scripts/skill-overrides.sh` still exist. Without that checkout, the check prints "skip".
 4. Put the new SHA in the `agent-skills` entry of `.claude-plugin/marketplace.json`.
 5. Release as above.
