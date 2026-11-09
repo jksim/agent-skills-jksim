@@ -46,6 +46,10 @@ bad=$(jq -r --arg mk "$mk" --slurpfile m "$m" --slurpfile p .claude-plugin/plugi
 snippet=$(awk '/^ *```json/ {f = 1; next} f && /^ *```/ {exit} f' README.md)
 jq -e --slurpfile t templates/consumer-settings.json '. == $t[0]' <<<"$snippet" >/dev/null 2>&1 ||
   fail manifests "README settings snippet differs from templates/consumer-settings.json"
+pin=$(jq -r '.plugins[] | select(.source.sha?) | "\(.source.sha[0:7]) \(.description)"' "$m")
+while read -r sha desc; do
+  [[ "$desc" == *"($sha)"* ]] || fail manifests "pin description does not name $sha: $desc"
+done <<<"$pin"
 step manifests ok
 
 tests=()
