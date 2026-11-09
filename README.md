@@ -12,7 +12,7 @@ You need these on your machine:
 
 | Need | Check | Fix |
 |---|---|---|
-| Claude Code (tested with 2.1.302) | `claude --version` | `claude update` |
+| Claude Code (tested with 2.1.321) | `claude --version` | `claude update` |
 | `jq` | `jq --version` | `sudo apt install jq` or `brew install jq` |
 | `git` | `git --version` | `sudo apt install git` or `brew install git` |
 
