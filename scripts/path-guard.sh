@@ -30,12 +30,13 @@ rel=${file#"$proj"/}
 # A project with its own ADR folder keeps it.
 [[ "$rel" == docs/decisions/* && -d "$proj/docs/decisions" ]] && exit 0
 
-# Not spec/*: RSpec and other test layouts use spec/.
+# In spec/ only the upstream spec names: RSpec and other test layouts use spec/.
+[[ "$rel" == spec/*/* ]] && exit 0
 
 case "$rel" in
-  SPEC.md | docs/SPEC.md) to=".claude-work/spec/SPEC.md" ;;
-  SPEC-*.md) to=".claude-work/spec/$rel" ;;
-  CAPABILITY-MAP.md) to=".claude-work/spec/CAPABILITY-MAP.md" ;;
+  SPEC.md | docs/SPEC.md | spec/SPEC.md) to=".claude-work/spec/SPEC.md" ;;
+  SPEC-*.md | spec/SPEC-*.md) to=".claude-work/spec/${rel#spec/}" ;;
+  CAPABILITY-MAP.md | spec/CAPABILITY-MAP.md | spec/capability-map.md) to=".claude-work/spec/CAPABILITY-MAP.md" ;;
   tasks/plan.md) to=".claude-work/tasks/plan-<id>.md" ;;
   tasks/todo.md) to=".claude-work/tasks/todo-<id>.md" ;;
   CONSTRAINTS.md) to=".claude-work/docs/CONSTRAINTS.md" ;;
