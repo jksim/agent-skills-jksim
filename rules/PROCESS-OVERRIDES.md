@@ -8,8 +8,9 @@ Working files go in `.claude-work/`. The upstream paths change as follows:
 | agent-skills default | Team path |
 |---|---|
 | `SPEC.md`, `docs/SPEC.md`, `spec/` | `.claude-work/spec/SPEC.md` |
-| `SPEC-<module>.md` | `.claude-work/spec/SPEC-<module>.md` |
-| Capability map | `.claude-work/spec/CAPABILITY-MAP.md` |
+| `SPEC-<module>.md`, `spec/SPEC-<module>.md` | `.claude-work/spec/SPEC-<module>.md` |
+| Delta spec `SPEC-<change>.md` | `.claude-work/spec/SPEC-<change>.md` |
+| Capability map, `spec/capability-map.md` | `.claude-work/spec/CAPABILITY-MAP.md` |
 | `tasks/plan.md` | `.claude-work/tasks/plan-<id>.md` |
 | `tasks/todo.md` | `.claude-work/tasks/todo-<id>.md` |
 | `CONSTRAINTS.md` | `.claude-work/docs/CONSTRAINTS.md` |
@@ -20,7 +21,7 @@ Working files go in `.claude-work/`. The upstream paths change as follows:
 `<id>` is the module id from the capability map. With no map, `<id>` is a short kebab-case feature id.
 A project that already has its own ADR folder keeps it.
 Consumer projects commit `.claude-work/`.
-`/agent-skills:build` finds the spec and plan at the team paths. It counts changes in `.claude-work/` as planning files, the same as upstream `SPEC.md` and `tasks/`.
+`/agent-skills:build` finds the spec, a delta spec and the plan at the team paths. The `Source spec:` line in a plan names the team path. It counts changes in `.claude-work/` as planning files, the same as upstream `SPEC.md` and `tasks/`.
 The constraints pointer line in `CLAUDE.md` names `.claude-work/docs/CONSTRAINTS.md`.
 When a request has several modules, the spec stage makes the capability map at `.claude-work/spec/CAPABILITY-MAP.md` before any module spec.
 

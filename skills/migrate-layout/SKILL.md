@@ -16,6 +16,7 @@ The argument is the `<id>` for the plan and task files, for example `/agent-skil
 ## When to Use
 
 - A project has `SPEC.md`, `tasks/plan.md`, `tasks/todo.md` or `CONSTRAINTS.md` at its root.
+- A project has `spec/capability-map.md` or `spec/SPEC-<module>.md` (upstream 0.6.18 and later).
 - A project has both root working files and `.claude-work/`.
 
 Do not use it for a new project. The spec stage writes to `.claude-work/` from the start.
@@ -36,8 +37,10 @@ Look only at these paths, relative to the project root:
 | Old path | Team path |
 |---|---|
 | `SPEC.md`, `docs/SPEC.md` | `.claude-work/spec/SPEC.md` |
-| `SPEC-<module>.md` | `.claude-work/spec/SPEC-<module>.md` |
+| `SPEC-<module>.md`, delta spec `SPEC-<change>.md` | `.claude-work/spec/SPEC-<module>.md`, `.claude-work/spec/SPEC-<change>.md` |
+| `spec/SPEC-<module>.md` | `.claude-work/spec/SPEC-<module>.md` |
 | `CAPABILITY-MAP.md` | `.claude-work/spec/CAPABILITY-MAP.md` |
+| `spec/capability-map.md` | `.claude-work/spec/CAPABILITY-MAP.md` |
 | `tasks/plan.md` | `.claude-work/tasks/plan-<id>.md` |
 | `tasks/todo.md` | `.claude-work/tasks/todo-<id>.md` |
 | `CONSTRAINTS.md` | `.claude-work/docs/CONSTRAINTS.md` |
@@ -45,7 +48,7 @@ Look only at these paths, relative to the project root:
 | `docs/intent/<topic>.md` | `.claude-work/docs/intent/<topic>.md` |
 | `docs/decisions/` | Stays. Ask (see step 4) |
 
-Do not touch `spec/`. RSpec and other test layouts use it.
+In `spec/`, move only `capability-map.md` and `SPEC-<module>.md` files directly in that folder. Leave all other files in `spec/`: RSpec and other test layouts use it.
 
 Use only files that git tracks (`git ls-files`). `git mv` fails on other files. Name any untracked or ignored old file and ask the user.
 
@@ -60,6 +63,7 @@ Use the argument. With no argument, suggest a short kebab-case id from the proje
 Show one table: old path, new path. Then list each conflict and ask about it:
 - **Target exists:** a file is already at the team path. Do not move that file. Ask what to do.
 - **Two specs:** both `SPEC.md` and `docs/SPEC.md` exist. Ask which one is the spec.
+- **Two maps:** both `CAPABILITY-MAP.md` and `spec/capability-map.md` exist, or two files give the same `SPEC-<module>.md` target. Ask which one to keep.
 - **Other files in `tasks/`:** move only `plan.md` and `todo.md`. Name the other files.
 - **`docs/decisions/` exists:** the default is to keep it, because a project keeps its own ADR folder. Move it to `.claude-work/docs/adr/` only when the user says so.
 
@@ -67,11 +71,11 @@ Do not move anything until the user approves the table.
 
 ### 5. Move with `git mv`
 
-Run `git mv <old> <new>` for each file. Make the target folders first (`mkdir -p`). Never copy and delete: `git mv` keeps the history. If `tasks/` is now empty, run `rmdir tasks`.
+Run `git mv <old> <new>` for each file. Make the target folders first (`mkdir -p`). Never copy and delete: `git mv` keeps the history. If `tasks/` or `spec/` is now empty, remove it with `rmdir`.
 
 ### 6. Fix live references
 
-Search the project for the old paths: `git grep -n -E 'SPEC(-[A-Za-z0-9_-]+)?\.md|CAPABILITY-MAP\.md|CONSTRAINTS\.md|tasks/(plan|todo)\.md|docs/(ideas|intent|decisions)/'`.
+Search the project for the old paths: `git grep -n -E 'SPEC(-[A-Za-z0-9_-]+)?\.md|CAPABILITY-MAP\.md|capability-map\.md|CONSTRAINTS\.md|tasks/(plan|todo)\.md|docs/(ideas|intent|decisions)/'`. This also finds `spec/SPEC-<module>.md` and `spec/capability-map.md`.
 
 Also search for the bare file names, because a moved file can name its partner without a folder: `git grep -n -E '(^|[^-/A-Za-z0-9_])(plan|todo)\.md'`. Example: "detail in todo.md" in the plan becomes "detail in todo-<id>.md".
 
@@ -115,7 +119,7 @@ Tell the user which files moved and which stayed. If `.claude-work/docs/VOCABULA
 
 - `git log --follow` shows no history before the migration commit.
 - A finished task entry or a change log names a team path that did not exist then.
-- `spec/` or `docs/decisions/` moved without the user's approval.
+- A file in `spec/` other than `capability-map.md` or `SPEC-<module>.md` moved, or `docs/decisions/` moved without the user's approval.
 - More than one commit, or a push.
 
 ## Verification

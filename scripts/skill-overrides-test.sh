@@ -103,5 +103,11 @@ done < <(grep '^| ' "$mig" | grep -oE '\.claude-work/[^`]+' | sort -u)
 while IFS= read -r path; do
   if grep -qF "$path" "$mig"; then echo "  ok   P skill has $path"; else echo "  FAIL P migrate-layout has no $path"; fails=$((fails + 1)); fi
 done < <(grep '^| ' "$CLAUDE_PLUGIN_ROOT/rules/PROCESS-OVERRIDES.md" | grep -oE '\.claude-work/[^`]+' | grep -v '^\.claude-work/docs/adr/' | sort -u)
+# Upstream spec names inside spec/ (0.6.18) are in both tables.
+for path in spec/capability-map.md 'spec/SPEC-<module>.md'; do
+  for f in "$mig" "$CLAUDE_PLUGIN_ROOT/rules/PROCESS-OVERRIDES.md"; do
+    if grep '^| ' "$f" | grep -qF "\`$path\`"; then echo "  ok   P $(basename "$f") has $path"; else echo "  FAIL P $(basename "$f") has no $path"; fails=$((fails + 1)); fi
+  done
+done
 
 ((fails == 0))
