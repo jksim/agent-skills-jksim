@@ -15,9 +15,9 @@
       "source": {
         "source": "github",
         "repo": "addyosmani/agent-skills",
-        "sha": "301b02b12bff98e4688e6984af6556802322bbde"
+        "sha": "e997ac5b9a74eab332d5e9793bb38a38c8cfdd74"
       },
-      "description": "Upstream agent-skills by Addy Osmani, pinned to 0.6.15 (301b02b)."
+      "description": "Upstream agent-skills by Addy Osmani, pinned to 0.6.18 (e997ac5)."
     }
   ]
 }
