@@ -68,6 +68,22 @@ result "M1 plan link updated" grep -q '\.\./spec/SPEC\.md' "$m/.claude-work/task
 result "M1 bare todo.md updated" grep -q 'detail in todo-smoke\.md' "$m/.claude-work/tasks/plan-smoke.md"
 result "M1 record unchanged" grep -q '^\*\*Files:\*\* SPEC.md$' "$m/.claude-work/tasks/todo-smoke.md"
 
+# M8: upstream 0.6.18 names in spec/, a root delta spec, and a test file that stays.
+m=$work/m8
+mkdir -p "$m/spec" && git -C "$m" init -q
+printf '# Capability Map\n' >"$m/spec/capability-map.md"
+printf '# Spec: billing\n' >"$m/spec/SPEC-billing.md"
+printf '# Spec Delta: ocr\n' >"$m/SPEC-ocr.md"
+printf 'RSpec.describe "greet"\n' >"$m/spec/greet_spec.rb"
+git -C "$m" add -A && git -C "$m" -c user.email=t@example.com -c user.name=T commit -qm Initial
+(cd "$m" && claude "${dirs[@]}" -p "/agent-skills-jksim:migrate-layout smoke. I approve the move table in advance; continue without waiting." \
+  --permission-mode acceptEdits --allowedTools "Bash(git *)" "Bash(mkdir *)" "Bash(rmdir *)" --max-turns 30 </dev/null >"$work/m8.out" 2>&1) || true
+result "M8 spec files moved" test -f "$m/.claude-work/spec/CAPABILITY-MAP.md" -a -f "$m/.claude-work/spec/SPEC-billing.md" -a -f "$m/.claude-work/spec/SPEC-ocr.md" \
+  -a ! -e "$m/spec/capability-map.md" -a ! -e "$m/spec/SPEC-billing.md" -a ! -e "$m/SPEC-ocr.md"
+result "M8 history kept" test "$(git -C "$m" log --follow --oneline -- .claude-work/spec/CAPABILITY-MAP.md | wc -l)" -eq 2
+result "M8 test file stays" test -f "$m/spec/greet_spec.rb"
+result "M8 one commit, clean tree" test "$(git -C "$m" log --oneline | wc -l)" -eq 2 -a -z "$(git -C "$m" status --porcelain)"
+
 if ((fails)); then
   echo "e2e-smoke: $fails failed (streams kept in $work)"
   trap - EXIT
